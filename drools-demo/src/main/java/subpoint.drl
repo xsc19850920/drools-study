@@ -1,0 +1,24 @@
+package com.genpact.drools
+import com.genpact.drools.PointDomain
+ // 发生退货，扣减10分
+rule subBackNumsPoint
+ //执行权重越大越先执行
+  salience 10  
+ //不重复执行
+ lock-on-active true
+ 	when  
+        $pointDomain : PointDomain(backNums >= 1)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()-10);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"subBackNumsPoint");  
+end  
+ // 退货金额大于100，扣减100分  
+rule subBackMondyPoint  
+    salience 9  
+    lock-on-active true  
+    when  
+        $pointDomain : PointDomain(backMondy >= 100)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()-100);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"subBackMondyPoint");  
+end  

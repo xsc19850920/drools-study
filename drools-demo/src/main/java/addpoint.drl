@@ -1,0 +1,67 @@
+package com.genpact.drools
+import com.genpact.drools.PointDomain
+ // 过生日，则加10分，并且将当月交易比数翻倍后再计算积分  
+rule birthdayPoint
+ //执行权重越大越先执行
+ salience 100   
+ //不重复执行
+ lock-on-active true
+  when  
+   $pointDomain : PointDomain(birthDay == true)  
+  then
+   $pointDomain.setPoint($pointDomain.getPoint()+10);  
+   $pointDomain.setBuyNums($pointDomain.getBuyNums()*2);  
+   $pointDomain.setBuyMoney($pointDomain.getBuyMoney()*2);  
+   $pointDomain.setBillThisMonth($pointDomain.getBillThisMonth()*2);  
+   
+   $pointDomain.readPointLog($pointDomain.getUserName(),"birthdayPoint");  
+end  
+
+// 2011-01-08 - 2011-08-08每月信用卡还款3次以上，每满3笔赠送30分  
+rule billThisMonthPoint  
+   
+    salience 99  
+    lock-on-active true  
+    //设置规则的生效时间，时间格式同上。
+    date-effective "2011-01-08 23:59:59"  
+    //设置规则的过期时间
+    date-expires "2011-08-08 23:59:59"  
+    when  
+        $pointDomain : PointDomain(billThisMonth >= 3)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()+$pointDomain.getBillThisMonth()/3*30);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"billThisMonthPoint");  
+end 
+
+// 当月购物总金额100以上，每100元赠送10分  
+rule buyMoneyPoint  
+    salience 98  
+    lock-on-active true  
+    when  
+        $pointDomain : PointDomain(buyMoney >= 100)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()+ (int)$pointDomain.getBuyMoney()/100 * 10);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"buyMoneyPoint");  
+end  
+
+ // 当月购物次数5次以上，每五次赠送50分  
+rule buyNumsPoint  
+    salience 97  
+    lock-on-active true  
+    when  
+        $pointDomain : PointDomain(buyNums >= 5)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()+$pointDomain.getBuyNums()/5 * 50);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"buyNumsPoint");  
+end 
+ 
+// 特别的，如果全部满足了要求，则额外奖励100分 
+rule allFitPoint  
+    salience 96  
+    lock-on-active true  
+    when  
+        $pointDomain:PointDomain(buyNums >= 5 && billThisMonth >= 3 && buyMoney >= 100)  
+    then  
+        $pointDomain.setPoint($pointDomain.getPoint()+ 100);  
+        $pointDomain.readPointLog($pointDomain.getUserName(),"allFitPoint");  
+end  
